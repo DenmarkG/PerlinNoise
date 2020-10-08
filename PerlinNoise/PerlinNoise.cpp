@@ -44,11 +44,11 @@ void PerlinNoise::GenerateGrid()
 {
 	Random rng;
 
-	m_unitVectorGrid = new Vector2* [kCellCountX + 1];
-	for (size_t x = 0; x < kCellCountX + 1; ++x)
+	m_unitVectorGrid = new Vector2* [kCellCountX];
+	for (size_t x = 0; x < kCellCountX; ++x)
 	{
-		m_unitVectorGrid[x] = new Vector2[kCellCountY + 1];
-		for (size_t y = 0; y < kCellCountY + 1; ++y)
+		m_unitVectorGrid[x] = new Vector2[kCellCountY];
+		for (size_t y = 0; y < kCellCountY; ++y)
 		{
 			Vector2 unit;
 			unit.X = rng(-1.F, 1.F);
@@ -70,23 +70,15 @@ Vector2 PerlinNoise::GetGridPosition(float xPosition, float yPosition)
 	float gridX = (xPosition / kSizeX) * kCellCountX;
 	float gridY = (yPosition / kSizeY) * kCellCountY;
 
-	if (gridY == kCellCountY - 1 && xPosition > 64)
-	{
-		int x = 0;
-		x += 1;
-	}
-
 	return Vector2(gridX, gridY);
 }
 
 float PerlinNoise::NoiseValue(float xPos, float yPos)
 {
 	int x0 = (int)xPos;
-	//int x1 = x0 == kCellCountX - 1 ? 0 : x0 + 1;
-	int x1 = x0 + 1;
+	int x1 = x0 == kCellCountX - 1 ? 0 : x0 + 1;
 	int y0 = (int)yPos;
-	//int y1 = y0 == kCellCountY ? 0 : y0 + 1;
-	int y1 = y0 + 1;
+	int y1 = y0 == kCellCountY - 1 ? 0 : y0 + 1;
 
 	// "Gradient" unit vectors
 	Vector2 topLeft = m_unitVectorGrid[x0][y0];
@@ -94,7 +86,7 @@ float PerlinNoise::NoiseValue(float xPos, float yPos)
 	Vector2 bottomRight = m_unitVectorGrid[x1][y1];
 	Vector2 bottomLeft = m_unitVectorGrid[x0][y1];
 
-	// Offset vectors // #DG: account for wrap around
+	// Offset vectors
 	Vector2 v1 = { xPos - x0, yPos - y0 };
 	Vector2 v2 = { xPos - (x0 + 1), yPos - y0 };
 	Vector2 v3 = { xPos - (x0 + 1), yPos - (y0 + 1) };
@@ -117,7 +109,7 @@ float PerlinNoise::NoiseValue(float xPos, float yPos)
 
 void PerlinNoise::DestroyGrid()
 {
-	for (int x = 0; x < kCellCountX + 1; ++x)
+	for (int x = 0; x < kCellCountX; ++x)
 	{
 		delete[] m_unitVectorGrid[x];
 		m_unitVectorGrid[x] = nullptr;

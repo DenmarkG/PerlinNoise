@@ -127,13 +127,6 @@ void Engine::Update()
 		std::chrono::duration<float> lastFrameDuration = thisFrameTime - lastFrameTime;
 		float deltaTime = lastFrameDuration.count();
 
-		// For Frame Locking
-		step += deltaTime;
-		if (step > kWorldSizeX)
-		{
-			step = kWorldSizeX - step;
-		}
-
 		lastFrameTime = thisFrameTime;
 
 		// Process Input
@@ -141,8 +134,6 @@ void Engine::Update()
 
 		SetColor(Color::BLACK);
 		SDL_RenderClear(m_pRenderer);
-
-		//m_noise->SetOffsetX(step);
 
 		for (int x = 0; x < kWorldSizeX; ++x)
 		{

@@ -20,8 +20,6 @@ public:
 	int GetSizeX() const { return kSizeX; }
 	int GetSizeY() const { return kSizeY; }
 
-	//void SetOffsetX(float offsetX) { m_offsetX = offsetX; }
-
 private:
 	Vector2 GetGridPosition(float xPosition, float yPosition);
 	float NoiseValue(float xPos, float yPos);
@@ -40,8 +38,5 @@ private:
 	int kSizeY;
 
 	float m_cellSize;
-
-	//float m_offsetX = 0.F;
-	//float m_offsetY = 0.F;
 };
 
