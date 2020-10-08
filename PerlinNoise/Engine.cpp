@@ -10,12 +10,16 @@
 
 int constexpr worldSize = 512;
 
-constexpr int kCellCountX = 8;
-constexpr int kCellCountY = 8;
+constexpr int kGridCountX = 8;
+constexpr int kGridCountY = 8;
 
 Engine::Engine()
 	: kWorldSizeX(worldSize)
 	, kWorldSizeY(worldSize)
+	, m_pRenderer(nullptr)
+	, m_pWindow(nullptr)
+	, m_shouldQuit(false)
+	, m_noise(nullptr)
 {
 }
 
@@ -65,11 +69,19 @@ int Engine::Init()
 		return -1;
 	}
 
+	m_noise = new PerlinNoise(kWorldSizeX, kWorldSizeY, kGridCountX, kGridCountY);
+
 	return 0;
 }
 
 void Engine::Teardown()
 {
+	if (m_noise)
+	{
+		delete m_noise;
+		m_noise = nullptr;
+	}
+
 	SDL_DestroyRenderer(m_pRenderer);
 	SDL_DestroyWindow(m_pWindow);
 	SDL_Quit();
@@ -82,10 +94,9 @@ void Engine::Update()
 	auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
 	// For frame locking:
-	//double step = 0;
+	float step = 0;
 
-	PerlinNoise noise(kWorldSizeX, kWorldSizeY, kCellCountX, kCellCountY);
-	noise.GenerateGrid();
+	m_noise->GenerateGrid();
 
 	// Clear the previous render state
 	SetColor(Color::BLACK);
@@ -95,10 +106,10 @@ void Engine::Update()
 	{
 		for (int y = 0; y < kWorldSizeY; ++y)
 		{
-			float gridX = (x / (float)noise.kSizeX) * (float)noise.kCellCountX;
-			float gridY = (y / (float)noise.kSizeY) * (float)noise.kCellCountY;
+			float gridX = (x / (float)m_noise->GetSizeX()) * (float)m_noise->GetCellCountX();
+			float gridY = (y / (float)m_noise->GetSizeY()) * (float)m_noise->GetCellCountY();
 
-			float noiseValue = noise.NoiseValue(gridX, gridY);
+			float noiseValue = m_noise->CalculateNoiseAtScreenPosition(gridX, gridY);
 			Color::uchar colorValue = static_cast<Color::uchar>(noiseValue * 255);
 			Color color = { colorValue, colorValue, colorValue, 255 };
 			SetColor(color);
@@ -113,17 +124,37 @@ void Engine::Update()
 		const float frameRate = 1/60;
 
 		auto thisFrameTime = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> lastFrameDuration = thisFrameTime - lastFrameTime;
-		double deltaTime = lastFrameDuration.count();
+		std::chrono::duration<float> lastFrameDuration = thisFrameTime - lastFrameTime;
+		float deltaTime = lastFrameDuration.count();
 
 		// For Frame Locking
-		//step += deltaTime;
+		step += deltaTime;
+		if (step > kWorldSizeX)
+		{
+			step = kWorldSizeX - step;
+		}
 
 		lastFrameTime = thisFrameTime;
 
 		// Process Input
 		ProcessInput();
 
+		SetColor(Color::BLACK);
+		SDL_RenderClear(m_pRenderer);
+
+		//m_noise->SetOffsetX(step);
+
+		for (int x = 0; x < kWorldSizeX; ++x)
+		{
+			for (int y = 0; y < kWorldSizeY; ++y)
+			{
+				float noiseValue = m_noise->CalculateNoiseAtScreenPosition((float)x, (float)y);
+				Color::uchar colorValue = static_cast<Color::uchar>(noiseValue * 255);
+				Color color = { colorValue, colorValue, colorValue, 255 };
+				SetColor(color);
+				SDL_RenderDrawPoint(m_pRenderer, x, y);				
+			}
+		}
 
 		// Present the everything rendered to the screen
 		SDL_RenderPresent(m_pRenderer);
@@ -173,6 +204,8 @@ void Engine::ProcessKeyboardEvent(SDL_KeyboardEvent* evt)
 	{
 	case SDL_SCANCODE_ESCAPE:
 		m_shouldQuit = true;
+		break;
+	case SDL_SCANCODE_SPACE:
 		break;
 	}
 }

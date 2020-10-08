@@ -2,6 +2,8 @@
 #include <SDL.h>
 
 class Color;
+class PerlinNoise;
+
 
 class Engine
 {
@@ -29,6 +31,8 @@ private:
 	SDL_Window* m_pWindow;
 
 	bool m_shouldQuit;
+
+	PerlinNoise* m_noise;
 
 private:
 	void ProcessInput();
